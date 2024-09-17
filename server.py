@@ -13,6 +13,9 @@ menu_scraper = MenuScraper('https://www.queens.cam.ac.uk/life-at-queens/catering
 post_generator = PostGenerator()
 instagram_api = InstagramAPI()
 
+current_week = "16/09"
+current_day = "18/09"
+
 def post_weekly_menu():
     menus = menu_scraper.get_weekly_menu()
     images = post_generator.generate_weekly_images(menus)
@@ -27,6 +30,20 @@ def post_daily_story():
 @app.route('/')
 def index():
     return "Menu Bot is running!"
+    
+@app.route('/update')
+def update_menu():
+    
+    last_menu_update = menu_scraper.get_week()
+    if (last_menu_update != current_week):
+        current_week = last_menu_update
+        post_weekly_menu()
+
+    if (current_week < today and later than 5:59 and current_day != today):
+        current_day = today
+        post_daily_story()
+
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
