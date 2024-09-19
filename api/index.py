@@ -12,7 +12,7 @@ import traceback
 # logging.basicConfig(filename='/public/societies/qjcr/public_html/QueensMenuBot/logfile.log', level=logging.ERROR)
 
 class R(Request):
-    trusted_hosts = {"ballot.qjcr.org.uk/"}
+    trusted_hosts = {"qjcr.soc.srcf.net"}
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
