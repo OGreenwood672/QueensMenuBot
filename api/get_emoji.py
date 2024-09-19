@@ -13,7 +13,7 @@ stopwords = set(['and', 'or', 'the'])
 def remove_stopwords(s):
     return s - stopwords
 
-demoji = json.load(open('codes.json', 'r'))
+demoji = json.load(open('api/static/codes.json', 'r'))
 # print(len(demoji))
 enmoji = {v: k for k, v in demoji.items()}
 
@@ -34,7 +34,6 @@ def search(s):
 def get_top_emoji(s):
     s = search(s)
     if len(s):
-        print(sorted(s.items(), key=lambda x: -x[1])[0][0])
         return sorted(s.items(), key=lambda x: -x[1])[0][0]
     return None
 
