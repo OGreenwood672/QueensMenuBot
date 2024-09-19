@@ -20,6 +20,7 @@ REDIRECT_URI_CODE = f'{HOST}validate-code'
 REDIRECT_URI_VALID_CODE = f'{HOST}callback'
 
 def save_user(user_id, token, expiration_time):
+    print(os.listdir())
     with open("/api/users.json") as f:
         data = load(f)
     
