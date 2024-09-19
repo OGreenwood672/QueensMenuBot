@@ -1,4 +1,4 @@
-from flask import Flask, session, redirect, url_for, request
+from flask import Flask, redirect, request
 from .insta import InstagramAPI
 from .get_menu import MenuScraper
 from .make_post import PostGenerator
