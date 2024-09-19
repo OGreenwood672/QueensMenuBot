@@ -15,11 +15,11 @@ logging.basicConfig(filename='/public/societies/qjcr/public_html/QueensMenuBot/l
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
 
-load_dotenv(".env")
+# load_dotenv(".env")
 
-FB_APP_ID = os.getenv("FB_APP_ID")
-FB_APP_SECRET = os.getenv("FB_APP_SECRET")
-HOST = os.getenv("HOST")
+FB_APP_ID = "L"#os.getenv("FB_APP_ID")
+FB_APP_SECRET = "L"#os.getenv("FB_APP_SECRET")
+HOST = "L"#os.getenv("HOST")
 REDIRECT_URI_CODE = f'{HOST}validate-code'
 REDIRECT_URI_VALID_CODE = f'{HOST}callback'
 
