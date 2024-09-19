@@ -1,7 +1,7 @@
 from flask import Flask, redirect, request
-from insta import InstagramAPI
-from get_menu import MenuScraper
-from make_post import PostGenerator
+from .insta import InstagramAPI
+from .get_menu import MenuScraper
+from .make_post import PostGenerator
 from datetime import timedelta, datetime
 from dotenv import load_dotenv
 import os
