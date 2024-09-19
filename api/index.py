@@ -9,7 +9,7 @@ from json import load, dump
 import logging
 import traceback
 
-logging.basicConfig(filename='/public/societies/qjcr/public_html/QueensMenuBot/logfile.log', level=logging.ERROR)
+# logging.basicConfig(filename='/public/societies/qjcr/public_html/QueensMenuBot/logfile.log', level=logging.ERROR)
 
 
 app = Flask(__name__)
@@ -90,6 +90,7 @@ def internal_server_error(e):
 def index():
     # fb_login_url = f"https://www.facebook.com/v20.0/dialog/oauth?client_id={FB_APP_ID}&redirect_uri={REDIRECT_URI_CODE}&scope=pages_manage_posts,instagram_content_publish"
     # return redirect(fb_login_url)
+    print("Hi")
     return "Queens' Menu Bot"
 
 @app.route('/validate-code')
