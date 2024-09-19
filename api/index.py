@@ -1,4 +1,4 @@
-from flask import Flask, redirect, request
+from flask import Flask, redirect, request, Request
 from .insta import InstagramAPI
 from .get_menu import MenuScraper
 from .make_post import PostGenerator
@@ -11,9 +11,12 @@ import traceback
 
 # logging.basicConfig(filename='/public/societies/qjcr/public_html/QueensMenuBot/logfile.log', level=logging.ERROR)
 
+class R(Request):
+    trusted_hosts = {"ballot.qjcr.org.uk/"}
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
+app.request_class = R
 
 # load_dotenv(".env")
 
