@@ -6,7 +6,6 @@ from datetime import timedelta, datetime
 from dotenv import load_dotenv
 import os
 from json import load, dump
-from google.cloud import firestore
 
 
 app = Flask(__name__)
