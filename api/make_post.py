@@ -6,8 +6,8 @@ import emoji
 
 class PostGenerator:
     def __init__(self):
-        self.font_path = "./assets/fonts/inriasans/InriaSans-Regular.ttf"
-        self.emoji_font_path = "./assets/fonts/notocolour/NotoEmoji-VariableFont_wght.ttf"
+        self.font_path = "/api/static/assets/fonts/inriasans/InriaSans-Regular.ttf"
+        self.emoji_font_path = "/api/static/assets/fonts/notocolour/NotoEmoji-VariableFont_wght.ttf"
         self.image_size = (1080, 1080)
 
     def generate_image(self, day, menu_dict):
@@ -132,7 +132,7 @@ class PostGenerator:
         draw.text(((self.image_size[0] - footer_width) / 2, self.image_size[1] - 50), footer_text, fill="black", font=font_body)
         
         # Save the image with the filename as {day}_menu.png
-        file_path = os.path.join("static/QueensMenus", f"{day}_menu.png")
+        file_path = os.path.join("/api/static/QueensMenus", f"{day}_menu.png")
         img.save(file_path)
 
         return file_path

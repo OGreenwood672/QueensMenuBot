@@ -20,7 +20,7 @@ REDIRECT_URI_CODE = f'{HOST}validate-code'
 REDIRECT_URI_VALID_CODE = f'{HOST}callback'
 
 def save_user(user_id, token, expiration_time):
-    with open("./users.json") as f:
+    with open("/api/users.json") as f:
         data = load(f)
     
     if data.get(user_id) == None:
@@ -29,26 +29,26 @@ def save_user(user_id, token, expiration_time):
     data[user_id]['access_token'] = token
     data[user_id]['expires_at'] = (datetime.now() + timedelta(seconds=expiration_time)).isoformat()
 
-    with open("./users.json", "w") as f:
+    with open("/api/users.json", "w") as f:
         dump(data, f)
 
 
 def get_user(user_id):
-    with open("./users.json") as f:
+    with open("/api/users.json") as f:
         user = load(f).get(user_id)
         if user:
             user['expires_at'] = datetime.fromisoformat(user['expires_at'])
         return user
     
 def get_user_custom_details(user_id):
-    with open("./custom_details.json") as f:
+    with open("/api/custom_details.json") as f:
         return load(f).get(user_id)
 
 def save_user_custom_details(user_id, details):
-    with open("./cusom_details.json") as f:
+    with open("/api/cusom_details.json") as f:
         data = load(f)
     data[user_id] = details
-    with open("./cusom_details.json") as f:
+    with open("/api/cusom_details.json") as f:
         dump(data, f)
 
 def is_token_expiring_soon(expiration_time):
