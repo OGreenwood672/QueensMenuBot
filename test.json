@@ -1,0 +1,110 @@
+{
+    "Monday": {
+        "Lunch": [
+            "Soup Of The Day",
+            "(Vegan/ ) Onion Bhajis On A Bed Of Spicy Tomato Sauce With Mango Chutney",
+            "(Halal) Paprika, Creamy Spinach And Chicken Pie",
+            "Broccoli",
+            "New Potatoes",
+            "Strawberry Frangipane"
+        ],
+        "Dinner": [
+            "Soup Of The Day",
+            "(Vegan) Mushroom And Spinach Lasagne",
+            "(Halal/ ) Harissa And Orange Chicken Thigh",
+            "New Potatoes",
+            "Green Beans",
+            "Assorted Desserts"
+        ]
+    },
+    "Tuesday": {
+        "Lunch": [
+            "Soup Of The Day",
+            "(Vegan/ ) Vegetable Madras Curry & Poppadom",
+            "Beef Madras Curry & Poppadom",
+            "Egg Fried Rice",
+            "Baby Carrots And Baby Corn",
+            "Cranberry Sponge With White Chocolate Custard"
+        ],
+        "Dinner": [
+            "(Vegan/ ) Sweet & Sour Tofu With Rice",
+            "(Halal) Chicken And Leek Gnocchi",
+            "Mix Veg",
+            "Spicy Potato Wedge",
+            "Assorted Desserts"
+        ]
+    },
+    "Wednesday": {
+        "Lunch": [
+            "Soup Of The Day",
+            "(Vegan) Red Lentil And Spinach Dhal",
+            "( ) Lemon Thyme Roasted Turkey With Gravy And Cranberry Sauce",
+            "Roast Potatoes",
+            "Cauliflower Cheese",
+            "Apple Strudel With Custard"
+        ],
+        "Dinner": [
+            "Soup Of The Day",
+            "(Vegan) Jackfruit Burger With Salad And Guacamole",
+            "(Halal/ ) Chicken Burger With Salad And Guacamole",
+            "Chips",
+            "Grilled Corn",
+            "Assorted Desserts"
+        ]
+    },
+    "Thursday": {
+        "Lunch": [
+            "Soup Of The Day",
+            "(Vegan) Meatball On Vegan Cheese Zapiekanka (Polish Pizza)",
+            "Hunters Chicken",
+            "Spicy Wedge Potatoes",
+            "Green Beans",
+            "White Chocolate Brioche And Butter Pudding And Orange Custard"
+        ],
+        "Dinner": [
+            "Soup Of The Day",
+            "(Vegan) Keralan Vegetable Curry",
+            "(Halal/ ) Chinese Five Spice Bbq Chicken Wings",
+            "Black Bean And Sweetcorn Rice",
+            "Peas",
+            "Assorted Dessert"
+        ]
+    },
+    "Friday": {
+        "Lunch": [
+            "Soup Of The Day",
+            "(Vegan/ ) Red Lentil And Spinach Korma With Rice",
+            "(Halal) Battered Fish",
+            "(Halal/ ) Wet Fish",
+            "Crushed Minted Peas",
+            "Chips",
+            "Turnover Apple Pie With Custard"
+        ],
+        "Dinner": [
+            "Soup Of The Day",
+            "(Vegan/ ) Spinach, Chickpea And Butternut Squash Risotto",
+            "(Halal) Chicken And Leek Risotto",
+            "Mix Veg",
+            "New Potatoes",
+            "Assorted Dessert"
+        ]
+    },
+    "Saturday": {
+        "Lunch": [
+            "Veggie Burger",
+            "Beef Burger",
+            "Skinny Fries",
+            "Mixed Veg"
+        ],
+        "Dinner": [
+            "(Vegan/ ) Oven Baked Chickpea And Courgette Falafel In Spicy Tomato Sauce",
+            "(Halal) Cajun Spiced Grilled Chicken With Chilli Mayo",
+            "Southern Fried Wedges",
+            "Sweetcorn",
+            "Assorted Desserts"
+        ]
+    },
+    "Sunday": {
+        "Brunch": []
+    }
+}

@@ -1,27 +1,59 @@
+import re
 import requests
 from bs4 import BeautifulSoup
+from datetime import datetime
 
 class MenuScraper:
     def __init__(self, url):
         self.url = url
+        self.soup = self.get_soup()
 
-    def get_html(self):
+    def get_soup(self):
         response = requests.get(self.url)
-        return response.text
-
-    def get_weekly_menu(self):
-        html = self.get_html()
-        soup = BeautifulSoup(html, 'html.parser')
+        if response.status_code == 200:
+            return BeautifulSoup(response.content, 'html.parser')
+        return None
+    
+    @staticmethod
+    def clean_text(text):
+        text = text.strip()
+        text = re.sub(r'\s+', ' ', text)
+        text = text.encode('ascii', 'ignore').decode()
         
-        # Assuming there's a div with class 'menu-item' for each day's menu
-        weekly_menu = []
-        for day in soup.find_all('div', class_='menu-item'):
-            day_menu = day.get_text(strip=True)
-            weekly_menu.append(day_menu)
-        
-        return weekly_menu
+        return text
 
-    def get_daily_menu(self):
-        weekly_menu = self.get_weekly_menu()
-        today_idx = time.localtime().tm_wday  # Monday is 0, Sunday is 6
-        return weekly_menu[today_idx]
+    def get_queens_menu(self):
+
+        content = self.soup.find('div', class_='content')
+        menu = {}
+        curr_meal = []
+
+        for td in content.find_all('td'):
+            td_text = MenuScraper.clean_text(td.text)
+            if td_text:
+                curr_meal.append(td_text)
+            else:
+                if not curr_meal[0] in menu.keys():
+                    menu[curr_meal[0]] = {}
+                menu[curr_meal[0]][curr_meal[1]] = curr_meal[2:]
+                curr_meal = []
+        
+        if not curr_meal[0] in menu.keys():
+            menu[curr_meal[0]] = {}
+        menu[curr_meal[0]][curr_meal[1]] = curr_meal[2:]
+        curr_meal = []
+
+        return menu
+    
+    def get_queens_week(self):
+        content = self.soup.find('div', class_='content')
+        date_text = content.find('p').text
+        date = date_text.strip()[16:]
+        no_suffix = re.sub(r'(\d+)(st|nd|rd|th)', r'\1', date)
+        date_obj = datetime.strptime(no_suffix + f" {datetime.now().year}", "%d %B %Y")
+        return date_obj
+
+
+if __name__ == "__main__":
+    menu_scraper = MenuScraper("https://www.queens.cam.ac.uk/life-at-queens/catering/cafeteria/cafeteria-menu")
+    print(menu_scraper.get_queens_week())
