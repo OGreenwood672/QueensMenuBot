@@ -1,7 +1,7 @@
 import random
 import os
 from PIL import Image, ImageDraw, ImageFont
-from get_emoji import get_top_emoji
+from .get_emoji import get_top_emoji
 import emoji
 
 class PostGenerator:
