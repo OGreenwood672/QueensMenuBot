@@ -6,6 +6,10 @@ from datetime import timedelta, datetime
 from dotenv import load_dotenv
 import os
 from json import load, dump
+import logging
+import traceback
+
+logging.basicConfig(filename='/path/to/logfile.log', level=logging.ERROR)
 
 
 app = Flask(__name__)
@@ -76,7 +80,11 @@ def refresh_token_if_needed(user_id):
 
     return access_token
 
+@app.errorhandler(500)
+def internal_server_error(e):
+    app.logger.error('Server Error: %s', traceback.format_exc())
 
+    return str(e), 500
 
 @app.route('/')
 def index():
@@ -158,37 +166,6 @@ def update_menu():
     return 'User not found', 404
 
 
-# @app.route('/post')
-# def post_to_instagram():
-#     user_id = session.get('user_id')
-#     access_token = refresh_token_if_needed(user_id)
-
-#     if access_token:
-
-#         api = InstagramAPI(user_id, access_token)
-
-#         media_object_id = api.create_instagram_media_object(user_id, 'https://example.com/image.jpg', 'Daily post!')
-#         if media_object_id:
-#             api.publish_instagram_post(user_id, media_object_id)
-#             return 'Post successful!', 200
-        
-#         return 'Failed to create media object', 400
-#     return 'User not authorized', 401
-
 if __name__ == '__main__':
     app.run(debug=True)
-
-
-    
-# @app.route('/update')
-# def update_menu():
-    
-#     last_menu_update = menu_scraper.get_week()
-#     if (last_menu_update != current_week):
-#         current_week = last_menu_update
-#         post_weekly_menu()
-
-#     if (current_week < today and later than 5:59 and current_day != today):
-#         current_day = today
-#         post_daily_story()
 
