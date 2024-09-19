@@ -5,7 +5,7 @@ import os
 sys.path.insert(0, os.path.dirname(__file__))
 
 # Add the virtual environment's site-packages to sys.path
-venv_path = os.path.join(os.path.dirname(__file__), 'venv', 'lib', 'python3.x', 'site-packages')
+venv_path = os.path.join(os.path.dirname(__file__), 'venv', 'lib', 'site-packages')
 sys.path.insert(0, venv_path)
 
 # Add the 'api' folder to the system path
