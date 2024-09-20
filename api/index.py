@@ -8,6 +8,7 @@ import os
 from json import load, dump
 import logging
 import traceback
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 # logging.basicConfig(filename='/public/societies/qjcr/public_html/QueensMenuBot/logfile.log', level=logging.ERROR)
 
