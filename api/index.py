@@ -163,7 +163,7 @@ def update_menu():
                 menu_names.append(pg.generate_image(day, menu[day], storage))
 
             # imgs = [f"{HOST}static/QueensMenus/{menu_name}" for menu_name in menu_names]
-            print(imgs)
+            print(menu_names)
             api.post_carousel(menu_names)
         
         if (
