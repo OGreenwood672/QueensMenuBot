@@ -46,7 +46,9 @@ class InstagramAPI:
             instagram_url = f"{self.FB_API_URL}/{page_id}?fields=instagram_business_account&access_token={self.access_token}"
             response = requests.get(instagram_url)
             print(response.json())
-            return response.json().get('id', None)
+            inst_id_obj = response.json().get('instagram_business_account', None)
+            if inst_id_obj:
+                return inst_id_obj.get('id', None)
 
         return None
 
