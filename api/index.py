@@ -17,6 +17,7 @@ class R(Request):
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
 app.request_class = R
+app.wsgi_app = ProxyFix(app.wsgi_app)
 
 load_dotenv(".env")
 
