@@ -6,16 +6,14 @@ from datetime import timedelta, datetime
 from dotenv import load_dotenv
 import os
 from json import load, dump
-import logging
-import traceback
 from werkzeug.middleware.proxy_fix import ProxyFix
-
-# logging.basicConfig(filename='/public/societies/qjcr/public_html/QueensMenuBot/logfile.log', level=logging.ERROR)
+from flask_cors import CORS
 
 class R(Request):
     trusted_hosts = {"qjcr.soc.srcf.net", "webserver.srcf.societies.cam.ac.uk"}
 
 app = Flask(__name__)
+CORS(app)
 app.secret_key = 'your_secret_key'
 app.request_class = R
 app.wsgi_app = ProxyFix(app.wsgi_app)
@@ -89,12 +87,6 @@ def refresh_token_if_needed(user_id):
             return new_token
 
     return access_token
-
-@app.errorhandler(500)
-def internal_server_error(e):
-    app.logger.error('Server Error: %s', traceback.format_exc())
-
-    return str(e), 500
 
 @app.route('/')
 def index():
