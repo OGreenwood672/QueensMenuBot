@@ -57,7 +57,9 @@ class InstagramAPI:
 
         self.user_id = self.get_instagram_account_id()
         url = f"{self.FB_API_URL}/{self.user_id}/media"
-        image_url = "https://shorturl.at/CNYmE"#"https://upload.wikimedia.org/wikipedia/commons/8/8a/SquareWhiteBorder.jpg"
+        #image_url = "https://shorturl.at/CNYmE"#"https://upload.wikimedia.org/wikipedia/commons/8/8a/SquareWhiteBorder.jpg"
+
+        print(image_url)
         params = {
             'image_url': image_url,
             'caption': caption,

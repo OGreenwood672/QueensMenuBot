@@ -15,7 +15,7 @@ class PostGenerator:
         self.save_folder = os.path.join(current_dir, "static", "QueensMenus")
         self.image_size = (1080, 1080)
 
-    def generate_image(self, day, menu_dict):
+    def generate_image(self, day, menu_dict, storage):
         # Create an image with a white background
         img = Image.new('RGB', self.image_size, color='white')
         draw = ImageDraw.Draw(img)
@@ -140,5 +140,10 @@ class PostGenerator:
         file_path = os.path.join(self.save_folder, menu_name)
         img.save(file_path, "JPEG")
 
-        return menu_name
+        bucket = storage.bucket()
+        blob = bucket.blob(menu_name)
+        blob.upload_from_filename(file_path)
+
+        # return menu_name
+        return blob.public_url
 

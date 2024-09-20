@@ -8,6 +8,31 @@ import os
 from json import load, dump
 from werkzeug.middleware.proxy_fix import ProxyFix
 from flask_cors import CORS
+import firebase_admin
+from firebase_admin import credentials
+from firebase_admin import storage
+
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
+users_file = os.path.join(current_dir, 'users.json')
+custom_details_file = os.path.join(current_dir, 'custom_details.json')
+service_key = os.path.join(current_dir, 'queens-menu-bot-firebase-adminsdk-atuxv-7cf94de0e7.json')
+
+
+load_dotenv(".env")
+
+FB_APP_ID = os.getenv("FB_APP_ID")
+FB_APP_SECRET = os.getenv("FB_APP_SECRET")
+HOST = os.getenv("HOST")
+REDIRECT_URI_CODE = f'{HOST}validate-code'
+REDIRECT_URI_VALID_CODE = f'{HOST}callback'
+STORAGE = os.getenv("STORAGE")
+
+
+cred = credentials.Certificate(service_key)
+firebase_admin.initialize_app(cred, {
+    'storageBucket': STORAGE
+})
 
 class R(Request):
     trusted_hosts = {"qjcr.soc.srcf.net", "webserver.srcf.societies.cam.ac.uk"}
@@ -18,18 +43,6 @@ app.secret_key = 'your_secret_key'
 app.request_class = R
 app.wsgi_app = ProxyFix(app.wsgi_app)
 
-current_dir = os.path.dirname(os.path.abspath(__file__))
-users_file = os.path.join(current_dir, 'users.json')
-custom_details_file = os.path.join(current_dir, 'custom_details.json')
-
-
-load_dotenv(".env")
-
-FB_APP_ID = os.getenv("FB_APP_ID")
-FB_APP_SECRET = os.getenv("FB_APP_SECRET")
-HOST = os.getenv("HOST")
-REDIRECT_URI_CODE = f'{HOST}validate-code'
-REDIRECT_URI_VALID_CODE = f'{HOST}callback'
 
 def save_user(user_id, token, expiration_time):
     print("SAVING", user_id)
@@ -149,9 +162,9 @@ def update_menu():
             for day in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']:
                 menu_names.append(pg.generate_image(day, menu[day]))
 
-            imgs = [f"{HOST}static/QueensMenus/{menu_name}" for menu_name in menu_names]
+            # imgs = [f"{HOST}static/QueensMenus/{menu_name}" for menu_name in menu_names]
             print(imgs)
-            api.post_carousel(imgs)
+            api.post_carousel(menu_names)
         
         if (
             datetime.now() > menu_week and datetime.now() < menu_week + timedelta(days=7) and
