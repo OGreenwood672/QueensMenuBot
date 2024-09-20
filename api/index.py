@@ -18,7 +18,7 @@ app = Flask(__name__)
 app.secret_key = 'your_secret_key'
 app.request_class = R
 
-# load_dotenv(".env")
+load_dotenv(".env")
 
 FB_APP_ID = os.getenv("FB_APP_ID")
 FB_APP_SECRET = os.getenv("FB_APP_SECRET")
