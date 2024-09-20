@@ -136,8 +136,9 @@ class PostGenerator:
         draw.text(((self.image_size[0] - footer_width) / 2, self.image_size[1] - 50), footer_text, fill="black", font=font_body)
         
         # Save the image with the filename as {day}_menu.png
-        file_path = os.path.join(self.save_folder, f"{day}_menu.png")
+        menu_name = f"{day}_menu.png"
+        file_path = os.path.join(self.save_folder, menu_name)
         img.save(file_path)
 
-        return file_path
+        return menu_name
 

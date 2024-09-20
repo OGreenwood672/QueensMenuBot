@@ -156,7 +156,7 @@ def update_menu():
             for day in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']:
                 menu_names.append(pg.generate_image(day, menu[day]))
 
-            imgs = [f"{HOST}/static/QueensMenus/{menu_name}" for menu_name in menu_names]
+            imgs = [f"{HOST}static/QueensMenus/{menu_name}" for menu_name in menu_names]
             print(imgs)
             api.post_carousel(imgs)
         
