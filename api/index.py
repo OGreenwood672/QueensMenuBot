@@ -152,9 +152,12 @@ def update_menu():
             print("Posting Weekly")
             menu = menu_scraper.get_queens_menu()
             pg = PostGenerator()
-            imgs = []
+            menu_names = []
             for day in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']:
-                imgs.append(pg.generate_image(day, menu[day]))
+                menu_names.append(pg.generate_image(day, menu[day]))
+
+            imgs = [f"{HOST}/static/QueensMenus/{menu_name}" for menu_name in menu_names]
+            print(imgs)
             api.post_carousel(imgs)
         
         if (
