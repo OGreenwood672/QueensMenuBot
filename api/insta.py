@@ -39,11 +39,13 @@ class InstagramAPI:
         url = f"{self.FB_API_URL}/me/accounts?access_token={self.access_token}"
         response = requests.get(url)
         data = response.json()
+        print("DATA", data)
         if 'data' in data and len(data['data']) > 0:
 
             page_id = data['data'][0]['id']  # Assume first page is the correct one
             instagram_url = f"{self.FB_API_URL}/{page_id}?fields=instagram_business_account&access_token={self.access_token}"
             response = requests.get(instagram_url)
+            print(response.json())
             return response.json().get('id', None)
 
         return None
