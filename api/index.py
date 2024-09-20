@@ -160,7 +160,7 @@ def update_menu():
             pg = PostGenerator()
             menu_names = []
             for day in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']:
-                menu_names.append(pg.generate_image(day, menu[day]))
+                menu_names.append(pg.generate_image(day, menu[day], storage))
 
             # imgs = [f"{HOST}static/QueensMenus/{menu_name}" for menu_name in menu_names]
             print(imgs)
