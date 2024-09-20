@@ -20,9 +20,9 @@ app.request_class = R
 
 # load_dotenv(".env")
 
-FB_APP_ID = "L"#os.getenv("FB_APP_ID")
-FB_APP_SECRET = "L"#os.getenv("FB_APP_SECRET")
-HOST = "L"#os.getenv("HOST")
+FB_APP_ID = os.getenv("FB_APP_ID")
+FB_APP_SECRET = os.getenv("FB_APP_SECRET")
+HOST = os.getenv("HOST")
 REDIRECT_URI_CODE = f'{HOST}validate-code'
 REDIRECT_URI_VALID_CODE = f'{HOST}callback'
 
