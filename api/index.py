@@ -97,7 +97,7 @@ def internal_server_error(e):
 
 @app.route('/')
 def index():
-    fb_login_url = f"https://www.facebook.com/v20.0/dialog/oauth?client_id={FB_APP_ID}&redirect_uri={REDIRECT_URI_CODE}&scope=pages_manage_posts,instagram_content_publish"
+    fb_login_url = f"https://www.facebook.com/v20.0/dialog/oauth?client_id={FB_APP_ID}&redirect_uri={REDIRECT_URI_CODE}&scope=instagram_content_publish,instagram_basic"
     return redirect(fb_login_url)
 
 @app.route('/validate-code')
