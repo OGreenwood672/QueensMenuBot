@@ -12,7 +12,7 @@ import traceback
 # logging.basicConfig(filename='/public/societies/qjcr/public_html/QueensMenuBot/logfile.log', level=logging.ERROR)
 
 class R(Request):
-    trusted_hosts = {"qjcr.soc.srcf.net"}
+    trusted_hosts = {"qjcr.soc.srcf.net", "webserver.srcf.societies.cam.ac.uk"}
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
@@ -91,10 +91,8 @@ def internal_server_error(e):
 
 @app.route('/')
 def index():
-    # fb_login_url = f"https://www.facebook.com/v20.0/dialog/oauth?client_id={FB_APP_ID}&redirect_uri={REDIRECT_URI_CODE}&scope=pages_manage_posts,instagram_content_publish"
-    # return redirect(fb_login_url)
-    print("Hi")
-    return "Queens' Menu Bot", 200
+    fb_login_url = f"https://www.facebook.com/v20.0/dialog/oauth?client_id={FB_APP_ID}&redirect_uri={REDIRECT_URI_CODE}&scope=pages_manage_posts,instagram_content_publish"
+    return redirect(fb_login_url)
 
 @app.route('/validate-code')
 def validate_code():
