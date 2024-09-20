@@ -60,6 +60,7 @@ class InstagramAPI:
         }
 
         response = requests.post(url, data=params)
+        print(response.json())
         return response.json().get('id')
 
     def publish_instagram_post(self, media_object_id):
