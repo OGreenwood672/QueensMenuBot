@@ -57,7 +57,7 @@ class InstagramAPI:
 
         self.user_id = self.get_instagram_account_id()
         url = f"{self.FB_API_URL}/{self.user_id}/media"
-
+        image_url = "https://drive.google.com/file/d/195pVc5YhykeeWOXpZtBkK-DotaRhiO0Q/view?pli=1"
         params = {
             'image_url': image_url,
             'caption': caption,
