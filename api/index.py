@@ -21,8 +21,8 @@ app.request_class = R
 app.wsgi_app = ProxyFix(app.wsgi_app)
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
-users_file = os.path.join(current_dir, 'api', 'users.json')
-custom_details_file = os.path.join(current_dir, 'api', 'custom_details.json')
+users_file = os.path.join(current_dir, 'users.json')
+custom_details_file = os.path.join(current_dir, 'custom_details.json')
 
 
 load_dotenv(".env")
