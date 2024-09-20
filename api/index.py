@@ -20,6 +20,11 @@ app.secret_key = 'your_secret_key'
 app.request_class = R
 app.wsgi_app = ProxyFix(app.wsgi_app)
 
+current_dir = os.path.dirname(os.path.abspath(__file__))
+users_file = os.path.join(current_dir, 'api', 'users.json')
+custom_details_file = os.path.join(current_dir, 'api', 'custom_details.json')
+
+
 load_dotenv(".env")
 
 FB_APP_ID = os.getenv("FB_APP_ID")
@@ -29,8 +34,7 @@ REDIRECT_URI_CODE = f'{HOST}validate-code'
 REDIRECT_URI_VALID_CODE = f'{HOST}callback'
 
 def save_user(user_id, token, expiration_time):
-    print(os.listdir())
-    with open("/api/users.json") as f:
+    with open(users_file) as f:
         data = load(f)
     
     if data.get(user_id) == None:
@@ -39,26 +43,26 @@ def save_user(user_id, token, expiration_time):
     data[user_id]['access_token'] = token
     data[user_id]['expires_at'] = (datetime.now() + timedelta(seconds=expiration_time)).isoformat()
 
-    with open("/api/users.json", "w") as f:
+    with open(users_file, "w") as f:
         dump(data, f)
 
 
 def get_user(user_id):
-    with open("/api/users.json") as f:
+    with open(users_file) as f:
         user = load(f).get(user_id)
         if user:
             user['expires_at'] = datetime.fromisoformat(user['expires_at'])
         return user
     
 def get_user_custom_details(user_id):
-    with open("/api/custom_details.json") as f:
+    with open(custom_details_file) as f:
         return load(f).get(user_id)
 
 def save_user_custom_details(user_id, details):
-    with open("/api/cusom_details.json") as f:
+    with open(custom_details_file) as f:
         data = load(f)
     data[user_id] = details
-    with open("/api/cusom_details.json") as f:
+    with open(custom_details_file) as f:
         dump(data, f)
 
 def is_token_expiring_soon(expiration_time):
