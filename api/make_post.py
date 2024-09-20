@@ -138,7 +138,7 @@ class PostGenerator:
         # Save the image with the filename as {day}_menu.png
         menu_name = f"{day}_menu.jpg"
         file_path = os.path.join(self.save_folder, menu_name)
-        img.save(file_path)
+        img.save(file_path, "JPEG")
 
         return menu_name
 
