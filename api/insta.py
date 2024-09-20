@@ -65,6 +65,7 @@ class InstagramAPI:
         }
 
         response = requests.post(url, data=params)
+        print("URL", url)
         print(response.json())
         return response.json().get('id')
 
