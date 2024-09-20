@@ -4,6 +4,12 @@ from PIL import Image, ImageDraw, ImageFont
 from .get_emoji import get_top_emoji
 import emoji
 
+def textsize(text, font):
+    im = Image.new(mode="P", size=(0, 0))
+    draw = ImageDraw.Draw(im)
+    _, _, width, height = draw.textbbox((0, 0), text=text, font=font)
+    return width, height
+
 class PostGenerator:
     def __init__(self):
         current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -53,7 +59,7 @@ class PostGenerator:
         
         # Draw the title text with a white background and curved corners
         title_text = day
-        text_width, text_height = draw.textsize(title_text, font=font_header)
+        text_width, text_height = textsize(title_text, font=font_header)
         
         # Rounded rectangle parameters
         padding = 20
@@ -96,7 +102,7 @@ class PostGenerator:
             line = ""
             for word in words:
                 test_line = line + (word + " ")
-                if draw.textsize(test_line, font=font)[0] <= max_width:
+                if textsize(test_line, font=font)[0] <= max_width:
                     line = test_line
                 else:
                     lines.append(line)
@@ -110,10 +116,10 @@ class PostGenerator:
                 for char in chars:
                     if emoji.is_emoji(char):
                         draw.text((x, y), char, fill="black", font=font_emoji)
-                        x += draw.textsize(char, font=font_emoji)[0]
+                        x += textsize(char, font=font_emoji)[0]
                     else:
                         draw.text((x, y), char, fill="black", font=font)
-                        x += draw.textsize(char, font=font)[0]
+                        x += textsize(char, font=font)[0]
                 y += font.getsize(line)[1] + 5
             return y
 
@@ -132,7 +138,7 @@ class PostGenerator:
 
         # Add a footer with a fun message or college motto
         footer_text = "Bon Appétit!"# from Queens’ College!"
-        footer_width, footer_height = draw.textsize(footer_text, font=font_body)
+        footer_width, footer_height = textsize(footer_text, font=font_body)
         draw.text(((self.image_size[0] - footer_width) / 2, self.image_size[1] - 50), footer_text, fill="black", font=font_body)
         
         # Save the image with the filename as {day}_menu.png
