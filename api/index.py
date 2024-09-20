@@ -34,6 +34,7 @@ REDIRECT_URI_CODE = f'{HOST}validate-code'
 REDIRECT_URI_VALID_CODE = f'{HOST}callback'
 
 def save_user(user_id, token, expiration_time):
+    print("SAVING", user_id)
     with open(users_file) as f:
         data = load(f)
     
@@ -97,7 +98,7 @@ def internal_server_error(e):
 
 @app.route('/')
 def index():
-    fb_login_url = f"https://www.facebook.com/v20.0/dialog/oauth?client_id={FB_APP_ID}&redirect_uri={REDIRECT_URI_CODE}&scope=instagram_content_publish,instagram_basic"
+    fb_login_url = f"https://www.facebook.com/v20.0/dialog/oauth?client_id={FB_APP_ID}&redirect_uri={REDIRECT_URI_CODE}&scope=instagram_content_publish,instagram_basic,pages_read_engagement"
     return redirect(fb_login_url)
 
 @app.route('/validate-code')
