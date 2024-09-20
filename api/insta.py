@@ -65,7 +65,7 @@ class InstagramAPI:
         }
 
         response = requests.post(url, data=params)
-        print("URL", url)
+        print("URL", url + f"?image_url={image_url}&caption={caption}&access_token={self.access_token}")
         print(response.json())
         return response.json().get('id')
 
