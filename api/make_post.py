@@ -6,8 +6,13 @@ import emoji
 
 class PostGenerator:
     def __init__(self):
-        self.font_path = "/api/static/assets/fonts/inriasans/InriaSans-Regular.ttf"
-        self.emoji_font_path = "/api/static/assets/fonts/notocolour/NotoEmoji-VariableFont_wght.ttf"
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+
+        self.font_path = os.path.join(current_dir, "static", "assets", "fonts", "inriasans", "InriaSans-Regular.ttf")
+        self.emoji_font_path = os.path.join(current_dir, "static", "assets", "fonts", "notocolour", "NotoEmoji-VariableFont_wght.ttf")
+        self.banners_folder = os.path.join(current_dir, "static", "assets", "Images", "banners")
+        self.crest_img = os.path.join(current_dir, "static", "assets", "Images", "crest.png")
+        self.save_folder = os.path.join(current_dir, "static", "QueensMenus")
         self.image_size = (1080, 1080)
 
     def generate_image(self, day, menu_dict):
@@ -15,8 +20,7 @@ class PostGenerator:
         img = Image.new('RGB', self.image_size, color='white')
         draw = ImageDraw.Draw(img)
         
-        banners_folder = './assets/Images/banners'
-        banners = [f for f in os.listdir(banners_folder) if os.path.isfile(os.path.join(banners_folder, f))]
+        banners = [f for f in os.listdir(banners_folder) if os.path.isfile(os.path.join(self.banner_folder, f))]
         selected_banner = random.choice(banners)
         banner_img = Image.open(os.path.join(banners_folder, selected_banner))
         banner_img = banner_img.convert('RGBA')  # Ensure it's in RGBA mode
@@ -34,7 +38,7 @@ class PostGenerator:
         img.paste(banner_img, (0, 0), banner_img)
         
         # Load and place the crest image
-        crest_img = Image.open('./assets/Images/crest.png')
+        crest_img = Image.open(self.crest_img)
         crest_width, crest_height = crest_img.size
         crest_scale = min(self.image_size[0] / crest_width, self.image_size[1] / crest_height / 5)  # Scale to fit within top fifth of the image
         crest_img = crest_img.resize((int(crest_width * crest_scale), int(crest_height * crest_scale)))
@@ -132,7 +136,7 @@ class PostGenerator:
         draw.text(((self.image_size[0] - footer_width) / 2, self.image_size[1] - 50), footer_text, fill="black", font=font_body)
         
         # Save the image with the filename as {day}_menu.png
-        file_path = os.path.join("/api/static/QueensMenus", f"{day}_menu.png")
+        file_path = os.path.join(self.save_folder, f"{day}_menu.png")
         img.save(file_path)
 
         return file_path
