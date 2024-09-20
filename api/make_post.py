@@ -20,9 +20,9 @@ class PostGenerator:
         img = Image.new('RGB', self.image_size, color='white')
         draw = ImageDraw.Draw(img)
         
-        banners = [f for f in os.listdir(banners_folder) if os.path.isfile(os.path.join(self.banner_folder, f))]
+        banners = [f for f in os.listdir(self.banners_folder) if os.path.isfile(os.path.join(self.banners_folder, f))]
         selected_banner = random.choice(banners)
-        banner_img = Image.open(os.path.join(banners_folder, selected_banner))
+        banner_img = Image.open(os.path.join(self.banners_folder, selected_banner))
         banner_img = banner_img.convert('RGBA')  # Ensure it's in RGBA mode
         
         # Stretch the banner image to full width
