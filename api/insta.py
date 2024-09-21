@@ -50,7 +50,7 @@ class InstagramAPI:
         return None
 
 
-    def create_instagram_media_object(self, image_url, caption):
+    def create_instagram_media_object(self, image_url, caption, is_story=False):
 
         self.user_id = self.get_instagram_account_id()
         url = f"{self.FB_API_URL}/{self.user_id}/media"
@@ -60,17 +60,18 @@ class InstagramAPI:
             'caption': caption,
             'access_token': self.access_token
         }
+        if is_story:
+            params['media_type'] = "STORIES"
 
         response = requests.post(url, data=params)
         return response.json().get('id')
 
-    def publish_instagram_story(self, media_object_id):
+    def publish_instagram_post(self, media_object_id):
 
         url = f"{self.FB_API_URL}/{self.user_id}/media_publish"
         params = {
             'creation_id': media_object_id,
             'access_token': self.access_token,
-            'media_type': "STORIES"
         }
 
         response = requests.post(url, data=params)

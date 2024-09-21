@@ -173,7 +173,9 @@ def update_menu():
             print("Posting Daily")
             pg = PostGenerator()
             day = datetime.today().strftime('%A')
-            api.publish_instagram_story(pg.generate_image(day, menu_scraper.get_queens_menu()[day], storage))
+            img = pg.generate_image(day, menu_scraper.get_queens_menu()[day], storage)
+            media_object_id = api.create_instagram_media_object(img, "Today's Menu")
+            api.publish_instagram_story(media_object_id)
 
         # save_user_custom_details(user_id, user_custom_details)
 
