@@ -52,7 +52,6 @@ class InstagramAPI:
 
     def create_instagram_media_object(self, image_url, caption, is_story=False):
 
-        self.user_id = self.get_instagram_account_id()
         url = f"{self.FB_API_URL}/{self.user_id}/media"
 
         params = {
