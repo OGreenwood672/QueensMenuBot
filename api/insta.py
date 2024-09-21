@@ -59,11 +59,11 @@ class InstagramAPI:
             'caption': caption,
             'access_token': self.access_token
         }
-        print(image_url)
         if is_story:
             params['media_type'] = "STORIES"
 
         response = requests.post(url, data=params)
+        print(response.json())
         return response.json().get('id')
 
     def publish_instagram_post(self, media_object_id):
