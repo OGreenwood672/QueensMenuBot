@@ -31,7 +31,6 @@ class InstagramAPI:
         }
 
         response = requests.get(url, params=params)
-        print("RESPONSE", response.json())
         return response.json()
 
 
@@ -39,13 +38,11 @@ class InstagramAPI:
         url = f"{self.FB_API_URL}/me/accounts?access_token={self.access_token}"
         response = requests.get(url)
         data = response.json()
-        print("DATA", data)
         if 'data' in data and len(data['data']) > 0:
 
             page_id = data['data'][0]['id']  # Assume first page is the correct one
             instagram_url = f"{self.FB_API_URL}/{page_id}?fields=instagram_business_account&access_token={self.access_token}"
             response = requests.get(instagram_url)
-            print(response.json())
             inst_id_obj = response.json().get('instagram_business_account', None)
             if inst_id_obj:
                 return inst_id_obj.get('id', None)
@@ -57,9 +54,7 @@ class InstagramAPI:
 
         self.user_id = self.get_instagram_account_id()
         url = f"{self.FB_API_URL}/{self.user_id}/media"
-        #image_url = "https://shorturl.at/CNYmE"#"https://upload.wikimedia.org/wikipedia/commons/8/8a/SquareWhiteBorder.jpg"
 
-        print(image_url)
         params = {
             'image_url': image_url,
             'caption': caption,
@@ -67,16 +62,15 @@ class InstagramAPI:
         }
 
         response = requests.post(url, data=params)
-        print("URL", url + f"?image_url={image_url}&caption={caption}&access_token={self.access_token}")
-        print(response.json())
         return response.json().get('id')
 
-    def publish_instagram_post(self, media_object_id):
+    def publish_instagram_story(self, media_object_id):
 
         url = f"{self.FB_API_URL}/{self.user_id}/media_publish"
         params = {
             'creation_id': media_object_id,
-            'access_token': self.access_token
+            'access_token': self.access_token,
+            'media_type': "STORIES"
         }
 
         response = requests.post(url, data=params)

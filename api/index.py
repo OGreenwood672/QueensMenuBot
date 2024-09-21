@@ -112,7 +112,7 @@ def validate_code():
     if code:
         api = InstagramAPI(None, None)
         response = api.validate_code(code, FB_APP_ID, FB_APP_SECRET, REDIRECT_URI_CODE)
-        print(response)
+
         if 'access_token' in response:
             return redirect(REDIRECT_URI_VALID_CODE + f"?access_token={response['access_token']}")
     
@@ -162,8 +162,6 @@ def update_menu():
             for day in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']:
                 menu_names.append(pg.generate_image(day, menu[day], storage))
 
-            # imgs = [f"{HOST}static/QueensMenus/{menu_name}" for menu_name in menu_names]
-            print(menu_names)
             api.post_carousel(menu_names)
         
         if (
@@ -175,7 +173,7 @@ def update_menu():
             print("Posting Daily")
             pg = PostGenerator()
             day = datetime.today().strftime('%A')
-            # pg.generate_daily_image(day, menu_scraper.get_queens_menu()[day])
+            api.publish_instagram_story(pg.generate_image(day, menu_scraper.get_queens_menu()[day], storage))
 
         # save_user_custom_details(user_id, user_custom_details)
 
