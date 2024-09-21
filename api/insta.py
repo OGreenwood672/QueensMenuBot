@@ -59,6 +59,7 @@ class InstagramAPI:
             'caption': caption,
             'access_token': self.access_token
         }
+        print(image_url)
         if is_story:
             params['media_type'] = "STORIES"
 
