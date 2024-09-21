@@ -167,15 +167,15 @@ def update_menu():
         if (
             datetime.now() > menu_week and datetime.now() < menu_week + timedelta(days=7) and
             datetime.fromisoformat(user_custom_details['current_day']) != datetime.today() and
-            datetime.now().time() > datetime.strptime("05:59", "%H:%M").time()
+            datetime.now().time() > datetime.strptime("00:59", "%H:%M").time()
         ):
             user_custom_details['current_day'] = datetime.today().isoformat()
             print("Posting Daily")
             pg = PostGenerator()
             day = datetime.today().strftime('%A')
             img = pg.generate_image(day, menu_scraper.get_queens_menu()[day], storage)
-            media_object_id = api.create_instagram_media_object(img, "Today's Menu")
-            api.publish_instagram_story(media_object_id)
+            media_object_id = api.create_instagram_media_object(img, "Today's Menu", is_story=True)
+            api.publish_instagram_post(media_object_id)
 
         # save_user_custom_details(user_id, user_custom_details)
 
