@@ -74,7 +74,7 @@ def save_user_custom_details(user_id, details):
     with open(custom_details_file) as f:
         data = load(f)
     data[user_id] = details
-    with open(custom_details_file) as f:
+    with open(custom_details_file, "w") as f:
         dump(data, f)
 
 def is_token_expiring_soon(expiration_time):
@@ -177,7 +177,7 @@ def update_menu():
             media_object_id = api.create_instagram_media_object(img, "Today's Menu", is_story=True)
             api.publish_instagram_post(media_object_id)
 
-        # save_user_custom_details(user_id, user_custom_details)
+        save_user_custom_details(user_id, user_custom_details)
 
         return 'Queens Menu Bot has updated Menu', 200
 

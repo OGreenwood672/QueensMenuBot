@@ -46,10 +46,17 @@ class MenuScraper:
                     menu[curr_meal[0]][curr_meal[1]] = curr_meal[2:]
                 curr_meal = []
 
-        if not curr_meal[0] in menu.keys():
-            menu[curr_meal[0]] = {}
-        menu[curr_meal[0]][curr_meal[1]] = curr_meal[2:]
-        curr_meal = []
+        is_one_line = len(curr_meal[0].split()) > 1
+        if is_one_line:
+            day = curr_meal[0].split()[0]
+            meal = curr_meal[0].split()[1]
+            if not day in menu.keys():
+                menu[day] = {}
+            menu[day][meal] = curr_meal[1:]
+        else:
+            if not curr_meal[0] in menu.keys():
+                menu[curr_meal[0]] = {}
+            menu[curr_meal[0]][curr_meal[1]] = curr_meal[2:]
 
         return menu
     
