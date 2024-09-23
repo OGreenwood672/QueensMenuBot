@@ -3,6 +3,7 @@ import os
 from PIL import Image, ImageDraw, ImageFont
 from .get_emoji import get_top_emoji
 import emoji
+from uuid import uuid1
 
 class PostGenerator:
     def __init__(self):
@@ -136,15 +137,13 @@ class PostGenerator:
         draw.text(((self.image_size[0] - footer_width) / 2, self.image_size[1] - 50), footer_text, fill="black", font=font_body)
         
         # Save the image with the filename as {day}_menu.png
-        menu_name = f"{day}_menu.jpg"
+        menu_name = f"{uuid1()}.jpg"
         file_path = os.path.join(self.save_folder, menu_name)
         img.save(file_path, "JPEG")
 
         bucket = storage.bucket()
         blob = bucket.blob(menu_name)
         blob.upload_from_filename(file_path)
-
-        print(blob.public_url)
 
         # return menu_name
         return blob.public_url

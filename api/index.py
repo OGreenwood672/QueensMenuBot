@@ -152,6 +152,11 @@ def update_menu():
         api = InstagramAPI(user_id=user_id, access_token=access_token)
         menu_scraper = MenuScraper("https://www.queens.cam.ac.uk/life-at-queens/catering/cafeteria/cafeteria-menu")
 
+        bucket = storage.bucket()
+        blobs = bucket.list_blobs()
+        for blob in blobs:
+            blob.delete()
+
         menu_week = menu_scraper.get_queens_week()
         if datetime.fromisoformat(user_custom_details['current_week']) != menu_week:
             user_custom_details['current_week'] = menu_week.isoformat()
