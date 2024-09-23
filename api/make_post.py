@@ -16,6 +16,7 @@ class PostGenerator:
         self.image_size = (1080, 1080)
 
     def generate_image(self, day, menu_dict, storage):
+        print(menu_dict)
         # Create an image with a white background
         img = Image.new('RGB', self.image_size, color='white')
         draw = ImageDraw.Draw(img)

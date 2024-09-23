@@ -46,7 +46,6 @@ class MenuScraper:
                     menu[curr_meal[0]][curr_meal[1]] = curr_meal[2:]
                 curr_meal = []
 
-        print("MENU", menu)
         is_one_line = len(curr_meal[0].split()) > 1
         if is_one_line:
             day = curr_meal[0].split()[0]
@@ -59,8 +58,6 @@ class MenuScraper:
                 menu[curr_meal[0]] = {}
             menu[curr_meal[0]][curr_meal[1]] = curr_meal[2:]
         
-        print(menu)
-
         return menu
     
     def get_queens_week(self):
