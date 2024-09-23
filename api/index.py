@@ -103,7 +103,7 @@ def refresh_token_if_needed(user_id):
 
 @app.route('/')
 def index():
-    fb_login_url = f"https://www.facebook.com/v20.0/dialog/oauth?client_id={FB_APP_ID}&redirect_uri={REDIRECT_URI_CODE}&scope=instagram_content_publish,instagram_basic,pages_read_engagement,pages_show_list"
+    fb_login_url = f"https://www.facebook.com/v20.0/dialog/oauth?client_id={FB_APP_ID}&redirect_uri={REDIRECT_URI_CODE}&scope=instagram_content_publish,instagram_basic,pages_read_engagement,pages_show_list,business_management"
     return redirect(fb_login_url)
 
 @app.route('/validate-code')
