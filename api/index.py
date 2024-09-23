@@ -166,10 +166,10 @@ def update_menu():
         
         if (
             datetime.now() > menu_week and datetime.now() < menu_week + timedelta(days=7) and
-            datetime.fromisoformat(user_custom_details['current_day']) != datetime.today() and
+            datetime.fromisoformat(user_custom_details['current_day']) != datetime.replace(hour=0, minute=0, second=0, microsecond=0).today() and
             datetime.now().time() > datetime.strptime("05:59", "%H:%M").time()
         ):
-            user_custom_details['current_day'] = datetime.today().isoformat()
+            user_custom_details['current_day'] = datetime.today().replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
             print("Posting Daily")
             pg = PostGenerator()
             day = datetime.today().strftime('%A')
