@@ -37,7 +37,7 @@ class MenuScraper:
                     menu[curr_meal[0]] = {}
                 menu[curr_meal[0]][curr_meal[1]] = curr_meal[2:]
                 curr_meal = []
-        print(menu)
+        print("MENU", menu)
         if not curr_meal[0] in menu.keys():
             menu[curr_meal[0]] = {}
         menu[curr_meal[0]][curr_meal[1]] = curr_meal[2:]
