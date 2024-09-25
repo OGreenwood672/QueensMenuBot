@@ -164,8 +164,9 @@ def update_menu():
             menu = menu_scraper.get_queens_menu()
             pg = PostGenerator()
             menu_names = []
-            for day in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']:
-                menu_names.append(pg.generate_image(day, datetime.now().strftime("%d %B"), menu[day], storage))
+            for index, day in enumerate(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']):
+                day_date = menu_week + timedelta(days=index)
+                menu_names.append(pg.generate_image(day, day_date.strftime("%d %B"), menu[day], storage))
 
             api.post_carousel(menu_names)
         
