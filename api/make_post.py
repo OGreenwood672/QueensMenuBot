@@ -152,6 +152,8 @@ class PostGenerator:
         blob = bucket.blob(menu_name)
         blob.upload_from_filename(file_path)
 
+        os.remove(file_path)
+
         # return menu_name
         return blob.public_url
 
@@ -296,6 +298,8 @@ class PostGenerator:
         bucket = storage.bucket()
         blob = bucket.blob(menu_name)
         blob.upload_from_filename(file_path)
+
+        os.remove(file_path)
 
         # return menu_name
         return blob.public_url
