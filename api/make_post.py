@@ -146,7 +146,7 @@ class PostGenerator:
         # Save the image with the filename as {day}_menu.png
         menu_name = f"{uuid1()}.jpg"
         file_path = os.path.join(self.save_folder, menu_name)
-        # img.save(file_path, "JPEG")
+        img.save(file_path, "JPEG")
 
         bucket = storage.bucket()
         blob = bucket.blob(menu_name)
@@ -291,7 +291,7 @@ class PostGenerator:
         # Save the image with the filename as {day}_menu.png
         menu_name = f"{uuid1()}.jpg"
         file_path = os.path.join(self.save_folder, menu_name)
-        # img.save(file_path, "JPEG")
+        img.save(file_path, "JPEG")
 
         bucket = storage.bucket()
         blob = bucket.blob(menu_name)
