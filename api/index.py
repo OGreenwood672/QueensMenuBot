@@ -165,7 +165,7 @@ def update_menu():
             pg = PostGenerator()
             menu_names = []
             for day in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']:
-                menu_names.append(pg.generate_image(day, menu[day], storage))
+                menu_names.append(pg.generate_image(day, datetime.now().strftime("%d %B"), menu[day], storage))
 
             api.post_carousel(menu_names)
         
@@ -178,7 +178,7 @@ def update_menu():
             print("Posting Daily")
             pg = PostGenerator()
             day = datetime.today().strftime('%A')
-            img = pg.generate_image(day, menu_scraper.get_queens_menu()[day], storage)
+            img = pg.generate_story(day, datetime.now().strftime("%d %B"), menu_scraper.get_queens_menu()[day], storage)
             media_object_id = api.create_instagram_media_object(img, "Today's Menu", is_story=True)
             api.publish_instagram_post(media_object_id)
 
