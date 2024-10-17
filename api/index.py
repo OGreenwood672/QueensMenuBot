@@ -96,7 +96,7 @@ def refresh_token_if_needed(user_id):
 
         if 'access_token' in long_lived_token_data:
             new_token = long_lived_token_data['access_token']
-            save_user(user_id, new_token, new_token['expires_in'])
+            save_user(user_id, new_token, long_lived_token_data.get('expires_in', 3600 * 24 * 30))
             return new_token
 
     return access_token
