@@ -1,0 +1,4 @@
+RewriteEngine On
+
+# Serve generated menu images directly from the app's static folder
+RewriteRule ^QueensMenus/(.*)$ api/static/QueensMenus/$1 [L]

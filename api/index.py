@@ -1,6 +1,6 @@
 from flask import Flask, redirect, request, Request
 from .insta import InstagramAPI
-from .get_menu import MenuScraper
+from .get_menu_playwright import MenuScraper
 from .make_post import PostGenerator
 from datetime import timedelta, datetime
 from dotenv import load_dotenv
@@ -8,31 +8,21 @@ import os
 from json import load, dump
 from werkzeug.middleware.proxy_fix import ProxyFix
 from flask_cors import CORS
-import firebase_admin
-from firebase_admin import credentials
-from firebase_admin import storage
 
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 users_file = os.path.join(current_dir, 'users.json')
 custom_details_file = os.path.join(current_dir, 'custom_details.json')
-service_key = os.path.join(current_dir, 'queens-menu-bot-firebase-adminsdk-atuxv-7cf94de0e7.json')
 
 
-load_dotenv(".env")
+env_path = os.path.abspath(os.path.join(current_dir, "..", ".env"))
+load_dotenv(env_path)
 
 FB_APP_ID = os.getenv("FB_APP_ID")
 FB_APP_SECRET = os.getenv("FB_APP_SECRET")
 HOST = os.getenv("HOST")
 REDIRECT_URI_CODE = f'{HOST}validate-code'
 REDIRECT_URI_VALID_CODE = f'{HOST}callback'
-STORAGE = os.getenv("STORAGE")
-
-
-cred = credentials.Certificate(service_key)
-firebase_admin.initialize_app(cred, {
-    'storageBucket': STORAGE
-})
 
 class R(Request):
     trusted_hosts = {"qjcr.soc.srcf.net", "webserver.srcf.societies.cam.ac.uk"}
@@ -150,23 +140,21 @@ def update_menu():
 
     if access_token:
         api = InstagramAPI(user_id=user_id, access_token=access_token)
-        menu_scraper = MenuScraper("https://www.queens.cam.ac.uk/life-at-queens/catering/cafeteria/cafeteria-menu")
-
-        bucket = storage.bucket()
-        blobs = bucket.list_blobs()
-        for blob in blobs:
-            blob.delete()
+        menu_scraper = MenuScraper(
+            "https://www.queens.cam.ac.uk/life-at-queens/catering/cafeteria/cafeteria-menu",
+            headless=True,
+        )
 
         menu_week = menu_scraper.get_queens_week()
         if datetime.fromisoformat(user_custom_details['current_week']) != menu_week:
             user_custom_details['current_week'] = menu_week.isoformat()
             print("Posting Weekly")
             menu = menu_scraper.get_queens_menu()
-            pg = PostGenerator()
+            pg = PostGenerator(base_url=HOST)
             menu_names = []
             for index, day in enumerate(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']):
                 day_date = menu_week + timedelta(days=index)
-                menu_names.append(pg.generate_image(day, day_date.strftime("%d %B"), menu[day], storage))
+                menu_names.append(pg.generate_image(day, day_date.strftime("%d %B"), menu[day]))
 
             api.post_carousel(menu_names)
         
@@ -177,9 +165,9 @@ def update_menu():
         ):
             user_custom_details['current_day'] = datetime.today().replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
             print("Posting Daily")
-            pg = PostGenerator()
+            pg = PostGenerator(base_url=HOST)
             day = datetime.today().strftime('%A')
-            img = pg.generate_story(day, datetime.now().strftime("%d %B"), menu_scraper.get_queens_menu()[day], storage)
+            img = pg.generate_story(day, datetime.now().strftime("%d %B"), menu_scraper.get_queens_menu()[day])
             media_object_id = api.create_instagram_media_object(img, "Today's Menu", is_story=True)
             api.publish_instagram_post(media_object_id)
 

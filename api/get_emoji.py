@@ -1,4 +1,5 @@
 import json
+import os
 # import Levenshtein
 # import word2emoji
 import re
@@ -13,7 +14,9 @@ stopwords = set(['and', 'or', 'the'])
 def remove_stopwords(s):
     return s - stopwords
 
-demoji = json.load(open('api/static/codes.json', 'r'))
+current_dir = os.path.dirname(os.path.abspath(__file__))
+codes_path = os.path.join(current_dir, "static", "codes.json")
+demoji = json.load(open(codes_path, "r"))
 # print(len(demoji))
 enmoji = {v: k for k, v in demoji.items()}
 

@@ -1,7 +1,9 @@
+import os
 import re
-import requests
+import pycurl
 from bs4 import BeautifulSoup
 from datetime import datetime
+from io import BytesIO
 
 class MenuScraper:
     def __init__(self, url):
@@ -9,9 +11,25 @@ class MenuScraper:
         self.soup = self.get_soup()
 
     def get_soup(self):
-        response = requests.get(self.url)
-        if response.status_code == 200:
-            return BeautifulSoup(response.content, 'html.parser')
+        buffer = BytesIO()
+        c = pycurl.Curl()
+        c.setopt(c.URL, self.url)
+        c.setopt(c.WRITEDATA, buffer)
+        c.setopt(c.FOLLOWLOCATION, True)
+        c.setopt(c.TIMEOUT, 10)
+        # Optionally set a browser-like user agent
+        c.setopt(c.USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36')
+        try:
+            c.perform()
+            status_code = c.getinfo(pycurl.RESPONSE_CODE)
+            if status_code == 200:
+                html = buffer.getvalue()
+                return BeautifulSoup(html, 'html.parser')
+            print(f"HTTP {status_code}: {buffer.getvalue()}")
+        except pycurl.error as e:
+            print(f"Request failed: {e}")
+        finally:
+            c.close()
         return None
     
     @staticmethod
@@ -70,5 +88,5 @@ class MenuScraper:
 
 
 if __name__ == "__main__":
-    menu_scraper = MenuScraper("https://www.queens.cam.ac.uk/life-at-queens/catering/cafeteria/cafeteria-menu")
-    print(menu_scraper.get_queens_week())
+    menu_scraper = MenuScraper("https://www.queens.cam.ac.uk/life-at-queens/catering/dining-hall/weekly-menu/")
+    print(menu_scraper.get_soup())

@@ -6,7 +6,7 @@ import emoji
 from uuid import uuid1
 
 class PostGenerator:
-    def __init__(self):
+    def __init__(self, base_url=None):
         current_dir = os.path.dirname(os.path.abspath(__file__))
 
         self.font_path = os.path.join(current_dir, "static", "assets", "fonts", "inriasans", "InriaSans-Regular.ttf")
@@ -15,8 +15,11 @@ class PostGenerator:
         self.crest_img = os.path.join(current_dir, "static", "assets", "Images", "crest.png")
         self.save_folder = os.path.join(current_dir, "static", "QueensMenus")
         self.image_size = (1080, 1080)
+        self.base_url = (base_url or os.getenv("HOST") or "").rstrip("/")
 
-    def generate_image(self, day, date_text, menu_dict, storage):
+        os.makedirs(self.save_folder, exist_ok=True)
+
+    def generate_image(self, day, date_text, menu_dict):
 
         self.image_size = (1080, 1080)
         # Create an image with a white background
@@ -148,16 +151,9 @@ class PostGenerator:
         file_path = os.path.join(self.save_folder, menu_name)
         img.save(file_path, "JPEG")
 
-        bucket = storage.bucket()
-        blob = bucket.blob(menu_name)
-        blob.upload_from_filename(file_path)
+        return self._public_url(menu_name, file_path)
 
-        os.remove(file_path)
-
-        # return menu_name
-        return blob.public_url
-
-    def generate_story(self, day, date_text, menu_dict, storage):
+    def generate_story(self, day, date_text, menu_dict):
         # Set the image size for mobile portrait (1080x1920, for example)
         self.image_size = (1080, 1920)  # Portrait aspect ratio
 
@@ -295,14 +291,12 @@ class PostGenerator:
         file_path = os.path.join(self.save_folder, menu_name)
         img.save(file_path, "JPEG")
 
-        bucket = storage.bucket()
-        blob = bucket.blob(menu_name)
-        blob.upload_from_filename(file_path)
+        return self._public_url(menu_name, file_path)
 
-        os.remove(file_path)
-
-        # return menu_name
-        return blob.public_url
+    def _public_url(self, menu_name, file_path):
+        if self.base_url:
+            return f"{self.base_url}/QueensMenus/{menu_name}"
+        return file_path
 
 
 if __name__ == "__main__":
