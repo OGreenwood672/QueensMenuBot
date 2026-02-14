@@ -3,7 +3,7 @@ import requests
 
 class InstagramAPI:
 
-    FB_API_URL = 'https://graph.facebook.com/v20.0'
+    FB_API_URL = 'https://graph.facebook.com/v24.0'
 
     def __init__(self, user_id, access_token):
         self.user_id = user_id
@@ -51,6 +51,10 @@ class InstagramAPI:
 
 
     def create_instagram_media_object(self, image_url, caption, is_story=False):
+        if not isinstance(image_url, str) or not image_url.startswith(("http://", "https://")):
+            raise ValueError(
+                "image_url must be a public http(s) URL reachable by Meta Graph API"
+            )
 
         url = f"{self.FB_API_URL}/{self.user_id}/media"
 

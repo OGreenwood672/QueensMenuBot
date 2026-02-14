@@ -1,1 +1,4 @@
-from .index import app
+try:
+	from .index import app
+except ModuleNotFoundError:
+	app = None

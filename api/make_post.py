@@ -5,6 +5,9 @@ from .get_emoji import get_top_emoji
 import emoji
 from uuid import uuid1
 
+
+DEFAULT_PUBLIC_BASE_URL = "https://tsg36.soc.srcf.net"
+
 class PostGenerator:
     def __init__(self, base_url=None):
         current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -15,7 +18,13 @@ class PostGenerator:
         self.crest_img = os.path.join(current_dir, "static", "assets", "Images", "crest.png")
         self.save_folder = os.path.join(current_dir, "static", "QueensMenus")
         self.image_size = (1080, 1080)
-        self.base_url = (base_url or os.getenv("HOST") or "").rstrip("/")
+        configured_base_url = (
+            base_url
+            or os.getenv("PUBLIC_BASE_URL")
+            or os.getenv("HOST")
+            or DEFAULT_PUBLIC_BASE_URL
+        )
+        self.base_url = configured_base_url.rstrip("/")
 
         os.makedirs(self.save_folder, exist_ok=True)
 
