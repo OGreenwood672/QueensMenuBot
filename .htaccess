@@ -1,9 +1,0 @@
-RewriteEngine On
-
-# Serve generated menu images directly from the app's static folder
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^QueensMenus/(.+)$ api/static/QueensMenus/$1 [L,NC]
-
-# Also allow direct static path access if needed
-RewriteRule ^static/QueensMenus/(.+)$ api/static/QueensMenus/$1 [L,NC]

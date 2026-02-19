@@ -1,306 +1,162 @@
-import random
 import os
-from PIL import Image, ImageDraw, ImageFont
-from .get_emoji import get_top_emoji
-import emoji
+import random
 from uuid import uuid1
 
+from PIL import Image, ImageDraw, ImageFont
 
 DEFAULT_PUBLIC_BASE_URL = "https://tsg36.soc.srcf.net"
+
 
 class PostGenerator:
     def __init__(self, base_url=None):
         current_dir = os.path.dirname(os.path.abspath(__file__))
 
         self.font_path = os.path.join(current_dir, "static", "assets", "fonts", "inriasans", "InriaSans-Regular.ttf")
-        self.emoji_font_path = os.path.join(current_dir, "static", "assets", "fonts", "notocolour", "NotoEmoji-VariableFont_wght.ttf")
         self.banners_folder = os.path.join(current_dir, "static", "assets", "Images", "banners")
         self.crest_img = os.path.join(current_dir, "static", "assets", "Images", "crest.png")
         self.save_folder = os.path.join(current_dir, "static", "QueensMenus")
-        self.image_size = (1080, 1080)
-        configured_base_url = (
-            base_url
-            or os.getenv("PUBLIC_BASE_URL")
-            or os.getenv("HOST")
-            or DEFAULT_PUBLIC_BASE_URL
-        )
+
+        configured_base_url = base_url
+        if configured_base_url is None:
+            configured_base_url = os.getenv("PUBLIC_BASE_URL") or os.getenv("HOST") or DEFAULT_PUBLIC_BASE_URL
         self.base_url = configured_base_url.rstrip("/")
 
         os.makedirs(self.save_folder, exist_ok=True)
 
-    def generate_image(self, day, date_text, menu_dict):
+    def _text_size(self, draw, text, font):
+        left, top, right, bottom = draw.textbbox((0, 0), text, font=font)
+        return right - left, bottom - top
 
-        self.image_size = (1080, 1080)
-        # Create an image with a white background
-        img = Image.new('RGB', self.image_size, color='white')
-        draw = ImageDraw.Draw(img)
-        
+    def _load_fonts(self, sizes):
+        return {name: ImageFont.truetype(self.font_path, size) for name, size in sizes.items()}
+
+    def _pick_banner(self, image_size, banner_height):
         banners = [f for f in os.listdir(self.banners_folder) if os.path.isfile(os.path.join(self.banners_folder, f))]
-        selected_banner = random.choice(banners)
-        banner_img = Image.open(os.path.join(self.banners_folder, selected_banner))
-        banner_img = banner_img.convert('RGBA')  # Ensure it's in RGBA mode
-        
-        # Stretch the banner image to full width
-        banner_img = banner_img.resize((self.image_size[0], int(self.image_size[0] * banner_img.height / banner_img.width)))
-        
-        # Crop the center of the banner image
-        banner_height = int(self.image_size[1] / 4.3)  # Top section height (adjust if necessary)
-        top = (banner_img.height - banner_height) // 2
-        bottom = top + banner_height
-        banner_img = banner_img.crop((0, top, self.image_size[0], bottom))
-        
-        # Paste the banner image at the top
-        img.paste(banner_img, (0, 0), banner_img)
-        
-        # Load and place the crest image
-        crest_img = Image.open(self.crest_img)
-        crest_width, crest_height = crest_img.size
-        crest_scale = min(self.image_size[0] / crest_width, self.image_size[1] / crest_height / 5)  # Scale to fit within top fifth of the image
-        crest_img = crest_img.resize((int(crest_width * crest_scale), int(crest_height * crest_scale)))
-        crest_x = self.image_size[0] - crest_img.width - 20  # 20 pixels from the right edge
-        img.paste(crest_img, (crest_x, 20), crest_img)  # Place crest in the top right corner
+        banner = Image.open(os.path.join(self.banners_folder, random.choice(banners))).convert("RGBA")
+        banner = banner.resize((image_size[0], int(image_size[0] * banner.height / banner.width)))
+        top = (banner.height - banner_height) // 2
+        return banner.crop((0, top, image_size[0], top + banner_height))
 
-        # Load fonts
-        font_header = ImageFont.truetype(self.font_path, 60)  # Larger font for the header
-        font_date = ImageFont.truetype(self.font_path, 30)    # Font for the date
-        font_header_larger = ImageFont.truetype(self.font_path, 40)  # Larger font for menu headers
-        font_body = ImageFont.truetype(self.font_path, 24)    # Smaller font for body text
-        font_emoji = ImageFont.truetype(self.emoji_font_path, 24)
-        
-        # Draw the title text with a white background and curved corners
-        title_text = day
-        text_width, text_height = draw.textsize(title_text, font=font_header)
-        
-        date_width, date_height = draw.textsize(date_text, font=font_date)
+    def _place_crest(self, img, image_size, banner_height, crest_divisor, y_pos):
+        crest = Image.open(self.crest_img)
+        crest_width, crest_height = crest.size
+        crest_scale = min(image_size[0] / crest_width, image_size[1] / crest_height / crest_divisor)
+        crest = crest.resize((int(crest_width * crest_scale), int(crest_height * crest_scale)))
+        crest_x = image_size[0] - crest.width - 20
+        img.paste(crest, (crest_x, y_pos), crest)
+        return crest.height
 
-        # Rounded rectangle parameters
+    def _draw_header_box(self, img, draw, title_text, date_text, banner_height, fonts, date_gap=0):
+        title_width, title_height = self._text_size(draw, title_text, fonts["header"])
+        date_width, date_height = self._text_size(draw, date_text, fonts["date"])
+
         padding = 20
-        rounded_rect_width = max(text_width, date_width) + 2 * padding
-        rounded_rect_height = text_height + date_height + 2 * padding
-        rect_x0 = (self.image_size[0] - rounded_rect_width) // 2
-        rect_y0 = (banner_height - rounded_rect_height) // 2
-        rect_x1 = rect_x0 + rounded_rect_width
-        rect_y1 = rect_y0 + rounded_rect_height
-        
-        # Create a mask for rounded corners
-        rounded_mask = Image.new('L', (rounded_rect_width, rounded_rect_height), 0)
-        mask_draw = ImageDraw.Draw(rounded_mask)
-        mask_draw.rounded_rectangle([0, 0, rounded_rect_width, rounded_rect_height], radius=20, fill=255)
-        rounded_rect_img = Image.new('RGBA', (rounded_rect_width, rounded_rect_height), 'white')
-        rounded_rect_img.putalpha(rounded_mask)
-        
-        # Paste the rounded rectangle background
-        img.paste(rounded_rect_img, (rect_x0, rect_y0), rounded_rect_img)
-        
-        # Draw the title text on top
-        draw.text((rect_x0 + padding, rect_y0 + padding), title_text, fill="black", font=font_header)
+        box_w = max(title_width, date_width) + 2 * padding
+        box_h = title_height + date_height + (2 * padding) + date_gap
+        x0 = (img.width - box_w) // 2
+        y0 = (banner_height - box_h) // 2
 
-        draw.text((rect_x0 + (rounded_rect_width - date_width) // 2, rect_y0 + padding + text_height), date_text, fill="black", font=font_date)
-        
-        # Prepare and draw the menu text with proper spacing
-        menu_text = ""
+        mask = Image.new("L", (box_w, box_h), 0)
+        ImageDraw.Draw(mask).rounded_rectangle([0, 0, box_w, box_h], radius=20, fill=255)
+        rounded = Image.new("RGBA", (box_w, box_h), "white")
+        rounded.putalpha(mask)
+        img.paste(rounded, (x0, y0), rounded)
+
+        draw.text((x0 + padding, y0 + padding), title_text, fill="black", font=fonts["header"])
+        date_x = x0 + (box_w - date_width) // 2
+        date_y = y0 + padding + title_height + date_gap
+        draw.text((date_x, date_y), date_text, fill="black", font=fonts["date"])
+
+        return title_height
+
+    def _iter_menu_lines(self, menu_dict):
         for header, items in menu_dict.items():
-            menu_text += f"\n{header}:\n"
+            yield f"{header}:", True
             for item in items:
-                item_emoji = get_top_emoji(item)
-                menu_text += " • " + (item_emoji if item_emoji else '\t') + item + "\n"
-        
-        margin = 50
-        offset = max(crest_img.height + 20, text_height + 30)  # Starting offset below the crest or title text
-        max_text_width = self.image_size[0] - 2 * margin
+                yield f"• {item}", False
 
-        # Function to draw text with wrapping
-        def draw_wrapped_text(draw, text, position, font, max_width):
-            lines = []
-            words = text.split()
-            line = ""
-            for word in words:
-                test_line = line + (word + " ")
-                if draw.textsize(test_line, font=font)[0] <= max_width:
-                    line = test_line
-                else:
-                    lines.append(line)
-                    line = word + " "
-            lines.append(line)
-            y = position[1]
-            for line in lines:
-                # Split line into characters
-                chars = list(line)
-                x = position[0]
-                for char in chars:
-                    if emoji.is_emoji(char):
-                        draw.text((x, y), char, fill="black", font=font_emoji)
-                        x += draw.textsize(char, font=font_emoji)[0]
-                    else:
-                        draw.text((x, y), char, fill="black", font=font)
-                        x += draw.textsize(char, font=font)[0]
-                y += font.getsize(line)[1] + 5
-            return y
+    def _wrap_text(self, draw, text, font, max_width):
+        if not text.strip():
+            return [""]
 
-        for line in menu_text.split('\n'):
-            if ':' in line:  # Only add a decorative line under headers
-                # Draw decorative line
-                line_width = max_text_width
-                draw.line([(margin, offset + 10), (margin + line_width, offset + 10)], fill="black", width=2)
-                offset += 20  # Space after the decorative line
-                # Draw menu header in larger font
-                offset = draw_wrapped_text(draw, line, (margin, offset), font_header_larger, max_text_width)
+        words = text.split()
+        lines, line = [], ""
+        for word in words:
+            test = f"{line}{word} "
+            if self._text_size(draw, test, font)[0] <= max_width:
+                line = test
             else:
-                # Draw body text
-                offset = draw_wrapped_text(draw, line, (margin, offset), font_body, max_text_width)
-            offset += 10  # Space after each line
+                lines.append(line)
+                line = f"{word} "
+        lines.append(line)
+        return lines
 
-        # Add a footer with a fun message or college motto
-        footer_text = "Bon Appétit!"# from Queens’ College!"
-        footer_width, footer_height = draw.textsize(footer_text, font=font_body)
-        draw.text(((self.image_size[0] - footer_width) / 2, self.image_size[1] - 50), footer_text, fill="black", font=font_body)
-        
-        # Save the image with the filename as {day}_menu.png
-        menu_name = f"{uuid1()}.jpg"
-        file_path = os.path.join(self.save_folder, menu_name)
-        img.save(file_path, "JPEG")
+    def _draw_wrapped_text(self, draw, text, x, y, font, max_width, spacing=5):
+        for line in self._wrap_text(draw, text, font, max_width):
+            draw.text((x, y), line, fill="black", font=font)
+            y += self._text_size(draw, line or " ", font)[1] + spacing
+        return y
 
-        return self._public_url(menu_name, file_path)
+    def _draw_menu_block(self, draw, menu_dict, start_y, fonts, image_width):
+        margin = 50
+        max_width = image_width - (2 * margin)
+        y = start_y
+
+        for text, is_header in self._iter_menu_lines(menu_dict):
+            if is_header:
+                draw.line([(margin, y + 10), (margin + max_width, y + 10)], fill="black", width=2)
+                y += 20
+                y = self._draw_wrapped_text(draw, text, margin, y, fonts["section"], max_width)
+            else:
+                y = self._draw_wrapped_text(draw, text, margin, y, fonts["body"], max_width)
+            y += 10
+
+    def _save(self, img):
+        name = f"{uuid1()}.jpg"
+        path = os.path.join(self.save_folder, name)
+        img.save(path, "JPEG")
+        return self._public_url(name, path)
+
+    def generate_image(self, day, date_text, menu_dict):
+        image_size = (1080, 1080)
+        banner_height = int(image_size[1] / 4.3)
+        img = Image.new("RGB", image_size, color="white")
+        draw = ImageDraw.Draw(img)
+
+        banner = self._pick_banner(image_size, banner_height)
+        img.paste(banner, (0, 0), banner)
+        crest_h = self._place_crest(img, image_size, banner_height, crest_divisor=5, y_pos=20)
+
+        fonts = self._load_fonts({"header": 60, "date": 30, "section": 40, "body": 24})
+        title_h = self._draw_header_box(img, draw, day, date_text, banner_height, fonts)
+
+        start_y = max(crest_h + 20, title_h + 30)
+        self._draw_menu_block(draw, menu_dict, start_y, fonts, image_size[0])
+
+        footer = "Bon Appétit!"
+        footer_w, _ = self._text_size(draw, footer, fonts["body"])
+        draw.text(((image_size[0] - footer_w) / 2, image_size[1] - 50), footer, fill="black", font=fonts["body"])
+        return self._save(img)
 
     def generate_story(self, day, date_text, menu_dict):
-        # Set the image size for mobile portrait (1080x1920, for example)
-        self.image_size = (1080, 1920)  # Portrait aspect ratio
-
-        # Create an image with a white background
-        img = Image.new('RGB', self.image_size, color='white')
+        image_size = (1080, 1920)
+        banner_height = int(image_size[1] / 3)
+        img = Image.new("RGB", image_size, color="white")
         draw = ImageDraw.Draw(img)
-        
-        # Load the banner
-        banners = [f for f in os.listdir(self.banners_folder) if os.path.isfile(os.path.join(self.banners_folder, f))]
-        selected_banner = random.choice(banners)
-        banner_img = Image.open(os.path.join(self.banners_folder, selected_banner))
-        banner_img = banner_img.convert('RGBA')  # Ensure it's in RGBA mode
 
-        # Stretch the banner image to the full width of the image size
-        banner_img = banner_img.resize((self.image_size[0], int(self.image_size[0] * banner_img.height / banner_img.width)))
+        banner = self._pick_banner(image_size, banner_height)
+        img.paste(banner, (0, 0), banner)
+        self._place_crest(img, image_size, banner_height, crest_divisor=6, y_pos=int(banner_height * 0.2))
 
-        # Crop the center of the banner image
-        banner_height = int(self.image_size[1] / 3)  # Adjusted for a taller layout
-        top = (banner_img.height - banner_height) // 2
-        bottom = top + banner_height
-        banner_img = banner_img.crop((0, top, self.image_size[0], bottom))
+        fonts = self._load_fonts({"header": 70, "date": 30, "section": 50, "body": 35})
+        self._draw_header_box(img, draw, day, date_text, banner_height, fonts, date_gap=10)
 
-        # Paste the banner image at the top
-        img.paste(banner_img, (0, 0), banner_img)
+        self._draw_menu_block(draw, menu_dict, banner_height, fonts, image_size[0])
 
-        # Load and place the crest image
-        crest_img = Image.open(self.crest_img)
-        crest_width, crest_height = crest_img.size
-        crest_scale = min(self.image_size[0] / crest_width, self.image_size[1] / crest_height / 6)  # Adjust to fit a smaller part of the portrait image
-        crest_img = crest_img.resize((int(crest_width * crest_scale), int(crest_height * crest_scale)))
-        crest_x = self.image_size[0] - crest_img.width - 20  # Place the crest 20 pixels from the right edge
-        crest_y = int(banner_height * 0.2)
-        img.paste(crest_img, (crest_x, crest_y), crest_img)  # Place crest in the top-right corner
-
-        # Load fonts
-        font_header = ImageFont.truetype(self.font_path, 70)  # Larger font for the header
-        font_date = ImageFont.truetype(self.font_path, 30)    # Font for the date
-        font_header_larger = ImageFont.truetype(self.font_path, 50)  # Larger font for menu headers
-        font_body = ImageFont.truetype(self.font_path, 35)    # Smaller font for body text
-        font_emoji = ImageFont.truetype(self.emoji_font_path, 35)
-        
-        # Draw the title text with a white background and rounded corners
-        title_text = day
-        text_width, text_height = draw.textsize(title_text, font=font_header)
-        
-        # Calculate the size of the date text
-        date_width, date_height = draw.textsize(date_text, font=font_date)
-        
-        # Adjust the rounded rectangle to fit both title and date
-        padding = 20
-        rounded_rect_width = max(text_width, date_width) + 2 * padding
-        rounded_rect_height = text_height + date_height + 3 * padding  # Add space for the date
-        rect_x0 = (self.image_size[0] - rounded_rect_width) // 2
-        rect_y0 = (banner_height - rounded_rect_height) // 2
-        rect_x1 = rect_x0 + rounded_rect_width
-        rect_y1 = rect_y0 + rounded_rect_height
-        
-        # Create a mask for rounded corners
-        rounded_mask = Image.new('L', (rounded_rect_width, rounded_rect_height), 0)
-        mask_draw = ImageDraw.Draw(rounded_mask)
-        mask_draw.rounded_rectangle([0, 0, rounded_rect_width, rounded_rect_height], radius=20, fill=255)
-        rounded_rect_img = Image.new('RGBA', (rounded_rect_width, rounded_rect_height), 'white')
-        rounded_rect_img.putalpha(rounded_mask)
-        
-        # Paste the rounded rectangle background
-        img.paste(rounded_rect_img, (rect_x0, rect_y0), rounded_rect_img)
-        
-        # Draw the title text on top
-        draw.text((rect_x0 + padding, rect_y0 + padding), title_text, fill="black", font=font_header)
-        
-        # Draw the date text below the title text
-        draw.text((rect_x0 + (rounded_rect_width - date_width) // 2, rect_y0 + padding + text_height + 10), date_text, fill="black", font=font_date)
-        
-        # Prepare and draw the menu text with proper spacing
-        menu_text = ""
-        for header, items in menu_dict.items():
-            menu_text += f"\n{header}:\n"
-            for item in items:
-                item_emoji = get_top_emoji(item)
-                menu_text += " • " + (item_emoji if item_emoji else '\t') + item + "\n"
-        
-        margin = 50
-        offset = banner_height  # Starting offset below the crest or title text
-        max_text_width = self.image_size[0] - 2 * margin
-
-        # Function to draw text with wrapping
-        def draw_wrapped_text(draw, text, position, font, max_width):
-            lines = []
-            words = text.split()
-            line = ""
-            for word in words:
-                test_line = line + (word + " ")
-                if draw.textsize(test_line, font=font)[0] <= max_width:
-                    line = test_line
-                else:
-                    lines.append(line)
-                    line = word + " "
-            lines.append(line)
-            y = position[1]
-            for line in lines:
-                chars = list(line)
-                x = position[0]
-                for char in chars:
-                    if emoji.is_emoji(char):
-                        draw.text((x, y), char, fill="black", font=font_emoji)
-                        x += draw.textsize(char, font=font_emoji)[0]
-                    else:
-                        draw.text((x, y), char, fill="black", font=font)
-                        x += draw.textsize(char, font=font)[0]
-                y += font.getsize(line)[1] + 5
-            return y
-
-        for line in menu_text.split('\n'):
-            if ':' in line:  # Only add a decorative line under headers
-                # Draw decorative line
-                line_width = max_text_width
-                draw.line([(margin, offset + 10), (margin + line_width, offset + 10)], fill="black", width=2)
-                offset += 20  # Space after the decorative line
-                # Draw menu header in larger font
-                offset = draw_wrapped_text(draw, line, (margin, offset), font_header_larger, max_text_width)
-            else:
-                # Draw body text
-                offset = draw_wrapped_text(draw, line, (margin, offset), font_body, max_text_width)
-            offset += 10  # Space after each line
-
-        # Add a footer with a fun message or college motto
-        footer_text = "Bon Appétit!"
-        footer_width, footer_height = draw.textsize(footer_text, font=font_body)
-        draw.text(((self.image_size[0] - footer_width) / 2, self.image_size[1] - 100), footer_text, fill="black", font=font_body)
-        
-        # Save the image with the filename as {day}_menu.png
-        
-        # Save the image with the filename as {day}_menu.png
-        menu_name = f"{uuid1()}.jpg"
-        file_path = os.path.join(self.save_folder, menu_name)
-        img.save(file_path, "JPEG")
-
-        return self._public_url(menu_name, file_path)
+        footer = "Bon Appétit!"
+        footer_w, _ = self._text_size(draw, footer, fonts["body"])
+        draw.text(((image_size[0] - footer_w) / 2, image_size[1] - 100), footer, fill="black", font=fonts["body"])
+        return self._save(img)
 
     def _public_url(self, menu_name, file_path):
         if self.base_url:
@@ -313,4 +169,4 @@ if __name__ == "__main__":
     pg.generate_story("Monday", "16th September", {
         "Lunch": ["beans", "bread"],
         "Dinner": ["Something tasty"]
-    }, None)
+    })

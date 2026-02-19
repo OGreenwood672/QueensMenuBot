@@ -5,3 +5,6 @@ venv/
 test.json
 
 ./api/queens-menu-bot-firebase-adminsdk-atuxv-7cf94de0e7.json
+/api/posts_made.json
+/api/static/QueensMenus/*
+/api/__pycache__/*

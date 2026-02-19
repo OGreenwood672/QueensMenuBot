@@ -1,14 +1,24 @@
 import argparse
+import mimetypes
 import os
 import time
+from contextlib import suppress
 from datetime import datetime, timedelta
 from json import load, dump
+from uuid import uuid4
+
+import requests
 
 
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 USERS_FILE = os.path.join(CURRENT_DIR, "users.json")
 CUSTOM_DETAILS_FILE = os.path.join(CURRENT_DIR, "custom_details.json")
-DEFAULT_BASE_URL = os.getenv("PUBLIC_BASE_URL", "https://tsg36.soc.srcf.net").rstrip("/")
+POST_HISTORY_FILE = os.path.join(CURRENT_DIR, "posts_made.json")
+EPOCH_ISO = "1970-01-01T00:00:00"
+DEFAULT_MENU_URL = "https://www.queens.cam.ac.uk/life-at-queens/catering/cafeteria/cafeteria-menu"
+WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+VERIFY_RETRIES = 5
+VERIFY_RETRY_SECONDS = 1
 
 
 def _load_json(path, default):
@@ -41,34 +51,158 @@ def _get_first_unexpired_user(users_data):
 
 
 def _ensure_user_custom_state(custom_data, user_id):
-    if user_id not in custom_data:
-        custom_data[user_id] = {
-            "current_day": "1970-01-01T00:00:00",
-            "current_week": "1970-01-01T00:00:00",
-        }
-    custom_data[user_id].setdefault("current_day", "1970-01-01T00:00:00")
-    custom_data[user_id].setdefault("current_week", "1970-01-01T00:00:00")
-    return custom_data[user_id]
+    state = custom_data.setdefault(user_id, {})
+    state.setdefault("current_day", EPOCH_ISO)
+    state.setdefault("current_week", EPOCH_ISO)
+    return state
 
 
-def _post_weekly(api, pg, menu_week, menu):
-    menu_names = []
-    for index, day in enumerate(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]):
+def _today_floor_iso():
+    return datetime.today().replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
+
+
+def _today_date_iso():
+    return datetime.today().date().isoformat()
+
+
+def _default_post_history():
+    return {"daily": [], "weekly": []}
+
+
+def _load_post_history():
+    raw = _load_json(POST_HISTORY_FILE, _default_post_history())
+    if not isinstance(raw, dict):
+        return _default_post_history()
+
+    daily = raw.get("daily", [])
+    weekly = raw.get("weekly", [])
+
+    if not isinstance(daily, list):
+        daily = []
+    if not isinstance(weekly, list):
+        weekly = []
+
+    # Keep insertion order while removing duplicates and non-strings.
+    normalized_daily = list(dict.fromkeys(value for value in daily if isinstance(value, str)))
+    normalized_weekly = list(dict.fromkeys(value for value in weekly if isinstance(value, str)))
+    return {"daily": normalized_daily, "weekly": normalized_weekly}
+
+
+def _has_daily_post(post_history, day_iso):
+    return day_iso in post_history["daily"]
+
+
+def _has_weekly_post(post_history, week_start_iso):
+    return week_start_iso in post_history["weekly"]
+
+
+def _record_daily_post(post_history, day_iso):
+    if not _has_daily_post(post_history, day_iso):
+        post_history["daily"].append(day_iso)
+
+
+def _record_weekly_post(post_history, week_start_iso):
+    if not _has_weekly_post(post_history, week_start_iso):
+        post_history["weekly"].append(week_start_iso)
+
+
+def _new_run_id():
+    return datetime.utcnow().strftime("%Y%m%dT%H%M%SZ") + f"-{uuid4().hex[:8]}"
+
+
+def _format_week_caption(menu_week):
+    return f"Week Commencing {menu_week.strftime('%d/%m/%y')}"
+
+
+def _upload_temp_image(r2, local_path, run_id):
+    ext = os.path.splitext(local_path)[1].lower() or ".jpg"
+    object_key = f"tmp/{run_id}/{uuid4().hex}{ext}"
+    content_type = mimetypes.guess_type(local_path)[0] or "image/jpeg"
+    public_url = r2.upload_file(local_path, object_key, content_type=content_type)
+    _verify_uploaded_image(public_url)
+    print(f"Uploaded image: {public_url}")
+    return public_url, object_key
+
+
+def _verify_uploaded_image(public_url):
+    last_error = None
+    for _ in range(VERIFY_RETRIES):
+        try:
+            response = requests.get(public_url, timeout=15)
+            if response.status_code >= 400:
+                last_error = f"HTTP {response.status_code}"
+            else:
+                content_type = (response.headers.get("Content-Type") or "").lower()
+                if "image/" in content_type:
+                    return
+                last_error = f"unexpected content-type: {content_type or '<missing>'}"
+        except requests.RequestException as exc:
+            last_error = str(exc)
+
+        time.sleep(VERIFY_RETRY_SECONDS)
+
+    raise RuntimeError(f"Uploaded image is not publicly reachable: {public_url} ({last_error})")
+
+
+def _upload_menu_json(r2, menu_week, menu):
+    generated_at = datetime.utcnow().isoformat() + "Z"
+    week_start = menu_week.date().isoformat()
+    payload = {
+        "generated_at": generated_at,
+        "week_commencing": week_start,
+        "source": DEFAULT_MENU_URL,
+        "menu": menu,
+    }
+
+    latest_url = r2.upload_json(payload, f"api/menu/latest.json")
+    week_url = r2.upload_json(payload, f"api/menu/week-{week_start}.json")
+    return latest_url, week_url
+
+
+def _cleanup_enabled():
+    return os.getenv("CLOUDFLARE_DELETE_TEMP_AFTER_POST", "false").strip().lower() in {"1", "true", "yes"}
+
+
+def _cleanup_temp_images(r2, keys):
+    if not _cleanup_enabled():
+        print("Temporary image cleanup skipped (set CLOUDFLARE_DELETE_TEMP_AFTER_POST=true to enable).")
+        return
+    with suppress(Exception):
+        r2.delete_keys(keys)
+
+
+def _post_weekly_via_cloudflare(api, pg, r2, menu_week, menu):
+    run_id = _new_run_id()
+    temp_keys, media_urls = [], []
+    for index, day in enumerate(WEEKDAYS):
         day_date = menu_week + timedelta(days=index)
-        day_menu = menu.get(day, {})
-        menu_names.append(pg.generate_image(day, day_date.strftime("%d %B"), day_menu))
-    api.post_carousel(menu_names)
+        local_path = pg.generate_image(day, day_date.strftime("%d %B"), menu.get(day, {}))
+        public_url, object_key = _upload_temp_image(r2, local_path, run_id)
+        media_urls.append(public_url)
+        temp_keys.append(object_key)
+
+    result = api.post_carousel(media_urls, _format_week_caption(menu_week))
+    _cleanup_temp_images(r2, temp_keys)
+    return result
 
 
-def _post_daily(api, pg, menu):
+def _post_daily_via_cloudflare(api, pg, r2, menu):
+    run_id = _new_run_id()
+    temp_keys = []
     day = datetime.today().strftime("%A")
-    img = pg.generate_story(day, datetime.now().strftime("%d %B"), menu.get(day, {}))
-    media_object_id = api.create_instagram_media_object(img, "Today's Menu", is_story=True)
-    api.publish_instagram_post(media_object_id)
+    local_path = pg.generate_story(day, datetime.now().strftime("%d %B"), menu.get(day, {}))
+    public_url, object_key = _upload_temp_image(r2, local_path, run_id)
+    temp_keys.append(object_key)
+
+    media_object_id = api.create_instagram_media_object(public_url, "Today's Menu", is_story=True)
+    result = api.publish_instagram_post(media_object_id)
+    _cleanup_temp_images(r2, temp_keys)
+    return result
 
 
-def _run_once(mode, base_url):
+def _run_once(mode):
     try:
+        from .cloudflare_r2 import CloudflareR2Client
         from .get_menu_playwright import MenuScraper
         from .insta import InstagramAPI
         from .make_post import PostGenerator
@@ -87,12 +221,11 @@ def _run_once(mode, base_url):
 
     custom_data = _load_json(CUSTOM_DETAILS_FILE, {})
     state = _ensure_user_custom_state(custom_data, user_id)
+    post_history = _load_post_history()
 
     api = InstagramAPI(user_id=user_id, access_token=access_token)
-    menu_scraper = MenuScraper(
-        "https://www.queens.cam.ac.uk/life-at-queens/catering/cafeteria/cafeteria-menu",
-        headless=True,
-    )
+    r2 = CloudflareR2Client()
+    menu_scraper = MenuScraper(DEFAULT_MENU_URL, headless=True)
 
     menu_week = menu_scraper.get_queens_week()
     if menu_week is None:
@@ -104,44 +237,69 @@ def _run_once(mode, base_url):
         print("Failed to fetch menu")
         return 1
 
-    pg = PostGenerator(base_url=base_url.rstrip("/"))
+    latest_menu_url, week_menu_url = _upload_menu_json(r2, menu_week, menu)
+    print(f"Published menu JSON: latest={latest_menu_url}")
+    print(f"Published menu JSON: weekly={week_menu_url}")
 
-    posted_weekly = False
-    posted_daily = False
+    pg = PostGenerator(base_url="")
+
+    posted_weekly, posted_daily = False, False
+    today_floor = _today_floor_iso()
+    today_date = _today_date_iso()
+    week_start_date = menu_week.date().isoformat()
 
     if mode == "weekly":
-        _post_weekly(api, pg, menu_week, menu)
-        state["current_week"] = menu_week.isoformat()
-        posted_weekly = True
+        if _has_weekly_post(post_history, week_start_date):
+            print(f"Skipping weekly post: already posted for week commencing {week_start_date}")
+        else:
+            _post_weekly_via_cloudflare(api, pg, r2, menu_week, menu)
+            state["current_week"] = menu_week.isoformat()
+            _record_weekly_post(post_history, week_start_date)
+            _save_json(POST_HISTORY_FILE, post_history)
+            posted_weekly = True
 
     elif mode == "daily":
-        _post_daily(api, pg, menu)
-        state["current_day"] = datetime.today().replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
-        posted_daily = True
+        if _has_daily_post(post_history, today_date):
+            print(f"Skipping daily post: already posted for {today_date}")
+        else:
+            _post_daily_via_cloudflare(api, pg, r2, menu)
+            state["current_day"] = today_floor
+            _record_daily_post(post_history, today_date)
+            _save_json(POST_HISTORY_FILE, post_history)
+            posted_daily = True
 
     else:  # auto
-        if datetime.fromisoformat(state["current_week"]) != menu_week:
-            _post_weekly(api, pg, menu_week, menu)
+        if not _has_weekly_post(post_history, week_start_date):
+            _post_weekly_via_cloudflare(api, pg, r2, menu_week, menu)
             state["current_week"] = menu_week.isoformat()
+            _record_weekly_post(post_history, week_start_date)
+            _save_json(POST_HISTORY_FILE, post_history)
             posted_weekly = True
+        else:
+            print(f"Skipping weekly post: already posted for week commencing {week_start_date}")
 
         if (
             datetime.now() > menu_week
             and datetime.now() < menu_week + timedelta(days=7)
-            and datetime.fromisoformat(state["current_day"]) != datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
+            and not _has_daily_post(post_history, today_date)
             and datetime.now().time() > datetime.strptime("05:59", "%H:%M").time()
         ):
-            _post_daily(api, pg, menu)
-            state["current_day"] = datetime.today().replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
+            _post_daily_via_cloudflare(api, pg, r2, menu)
+            state["current_day"] = today_floor
+            _record_daily_post(post_history, today_date)
+            _save_json(POST_HISTORY_FILE, post_history)
             posted_daily = True
+        elif _has_daily_post(post_history, today_date):
+            print(f"Skipping daily post: already posted for {today_date}")
 
     _save_json(CUSTOM_DETAILS_FILE, custom_data)
+    _save_json(POST_HISTORY_FILE, post_history)
     print(f"Done. posted_weekly={posted_weekly}, posted_daily={posted_daily}, mode={mode}")
     return 0
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Queens Menu Bot CLI publisher")
+    parser = argparse.ArgumentParser(description="Queens Menu Bot CLI publisher via Cloudflare R2")
     parser.add_argument(
         "--mode",
         choices=["auto", "daily", "weekly"],
@@ -159,23 +317,17 @@ def main():
         default=15,
         help="Polling interval in minutes for continuous mode",
     )
-    parser.add_argument(
-        "--base-url",
-        default=DEFAULT_BASE_URL,
-        help="Public base URL for generated images (default: http://localhost:5000)",
-    )
-
     args = parser.parse_args()
 
     if args.interval_minutes < 1:
         parser.error("--interval-minutes must be >= 1")
 
     if args.once:
-        raise SystemExit(_run_once(args.mode, args.base_url))
+        raise SystemExit(_run_once(args.mode))
 
     print(f"Starting continuous publisher: mode={args.mode}, every {args.interval_minutes} minutes")
     while True:
-        code = _run_once(args.mode, args.base_url)
+        code = _run_once(args.mode)
         if code != 0:
             print("Cycle failed; retrying next interval")
         time.sleep(args.interval_minutes * 60)
